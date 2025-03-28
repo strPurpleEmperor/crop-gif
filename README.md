@@ -1,84 +1,91 @@
-<div align="center">
+## 配合react-easy-crop使用
+```shell
+npm install react-easy-crop
+npm install @zyss/crop-gif
+```
+```typescript jsx
+import './App.css';
+import { Button, Upload } from 'antd';
+import Cropper, { Area } from 'react-easy-crop';
+import { useLayoutEffect, useRef, useState } from 'react';
+import init, { crop_gif } from '@zyss/crop-gif';
 
-  <h1><code>wasm-pack-template</code></h1>
+const App = () => {
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [yourImage, setImg] = useState<any>();
+  const [file, setFile] = useState<File>();
+  const area = useRef<Area>();
+  useLayoutEffect(() => {
+    init().then(() => {
+      console.log('wasm init!');
+    });
+  }, []);
+  const onCropComplete = (_croppedArea: Area, croppedAreaPixels: Area) => {
+    area.current = {
+      x: croppedAreaPixels.x,
+      y: croppedAreaPixels.y,
+      width: croppedAreaPixels.width,
+      height: croppedAreaPixels.height,
+    };
+  };
+  return (
+    <div className="content">
+      <Upload
+        onChange={({ file }) => {
+          setImg(URL.createObjectURL(file as any));
+          setFile(file as any);
+        }}
+        beforeUpload={() => {
+          return false;
+        }}
+      >
+        <Button>上传</Button>
+      </Upload>
+      <div
+        style={{
+          width: 300,
+          height: 300,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        }}
+      >
+        <Cropper
+          image={yourImage}
+          crop={crop}
+          zoom={zoom}
+          aspect={4 / 3}
+          onCropChange={setCrop}
+          onCropComplete={onCropComplete}
+          onZoomChange={setZoom}
+        />
+      </div>
+      <Button
+        onClick={() => {
+          const rustArea = area.current!;
+          file?.arrayBuffer().then((gifBuffer) => {
+            const uint8Array = new Uint8Array(gifBuffer);
+            const cropGifU8Array = crop_gif(
+              uint8Array,
+              rustArea.width,
+              rustArea.height,
+              rustArea.x,
+              rustArea.y,
+            );
+            const blob = new Blob([cropGifU8Array], { type: file!.type });
+            const objectURL = URL.createObjectURL(blob);
+            // 浏览器查看
+            window.open(objectURL, '_blank');
+          });
+        }}
+      >
+        裁剪
+      </Button>
+    </div>
+  );
+};
 
-  <strong>A template for kick starting a Rust and WebAssembly project using <a href="https://github.com/rustwasm/wasm-pack">wasm-pack</a>.</strong>
-
-  <p>
-    <a href="https://travis-ci.org/rustwasm/wasm-pack-template"><img src="https://img.shields.io/travis/rustwasm/wasm-pack-template.svg?style=flat-square" alt="Build Status" /></a>
-  </p>
-
-  <h3>
-    <a href="https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/index.html">Tutorial</a>
-    <span> | </span>
-    <a href="https://discordapp.com/channels/442252698964721669/443151097398296587">Chat</a>
-  </h3>
-
-  <sub>Built with 🦀🕸 by <a href="https://rustwasm.github.io/">The Rust and WebAssembly Working Group</a></sub>
-</div>
-
-## About
-
-[**📚 Read this template tutorial! 📚**][template-docs]
-
-This template is designed for compiling Rust libraries into WebAssembly and
-publishing the resulting package to NPM.
-
-Be sure to check out [other `wasm-pack` tutorials online][tutorials] for other
-templates and usages of `wasm-pack`.
-
-[tutorials]: https://rustwasm.github.io/docs/wasm-pack/tutorials/index.html
-[template-docs]: https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/index.html
-
-## 🚴 Usage
-
-### 🐑 Use `cargo generate` to Clone this Template
-
-[Learn more about `cargo generate` here.](https://github.com/ashleygwilliams/cargo-generate)
+export default App;
 
 ```
-cargo generate --git https://github.com/rustwasm/wasm-pack-template.git --name my-project
-cd my-project
-```
-
-### 🛠️ Build with `wasm-pack build`
-
-```
-wasm-pack build
-```
-
-### 🔬 Test in Headless Browsers with `wasm-pack test`
-
-```
-wasm-pack test --headless --firefox
-```
-
-### 🎁 Publish to NPM with `wasm-pack publish`
-
-```
-wasm-pack publish
-```
-
-## 🔋 Batteries Included
-
-* [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) for communicating
-  between WebAssembly and JavaScript.
-* [`console_error_panic_hook`](https://github.com/rustwasm/console_error_panic_hook)
-  for logging panic messages to the developer console.
-* `LICENSE-APACHE` and `LICENSE-MIT`: most Rust projects are licensed this way, so these are included for you
-
-## License
-
-Licensed under either of
-
-* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-### Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally
-submitted for inclusion in the work by you, as defined in the Apache-2.0
-license, shall be dual licensed as above, without any additional terms or
-conditions.

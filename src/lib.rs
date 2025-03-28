@@ -1,6 +1,6 @@
 use image::codecs::gif::{GifDecoder, GifEncoder, Repeat};
 use image::imageops::crop;
-use image::{AnimationDecoder, Delay, Frame,  RgbaImage};
+use image::{AnimationDecoder, Delay, Frame, RgbaImage};
 use js_sys::Uint8Array;
 use std::io::Cursor;
 use std::vec::Vec;
@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::*;
 pub use console_error_panic_hook::set_once as set_panic_hook;
 
 #[wasm_bindgen]
-pub fn crop_gif(gif_data: &[u8], w:u32,h:u32,x:u32,y:u32) -> Result<Uint8Array, JsValue> {
+pub fn crop_gif(gif_data: &[u8], w: u32, h: u32, x: u32, y: u32) -> Result<Uint8Array, JsValue> {
     let cursor = Cursor::new(gif_data);
     // 解码 GIF
     let decoder = GifDecoder::new(cursor).map_err(|_| JsValue::from_str("GIF 解码失败"))?;
@@ -23,7 +23,7 @@ pub fn crop_gif(gif_data: &[u8], w:u32,h:u32,x:u32,y:u32) -> Result<Uint8Array, 
     for frame in frames {
         let delay = frame.delay();
         let mut image = frame.into_buffer();
-        let new_image = crop_image(&mut image, w,h,x,y);
+        let new_image = crop_image(&mut image, w, h, x, y);
         mirrored_frames.push((new_image, delay));
     }
 
@@ -45,7 +45,7 @@ pub fn crop_gif(gif_data: &[u8], w:u32,h:u32,x:u32,y:u32) -> Result<Uint8Array, 
     Ok(Uint8Array::from(&output_data[..]))
 }
 
-fn crop_image(image: &mut RgbaImage, w:u32,h:u32,x:u32,y:u32) -> RgbaImage {
+fn crop_image(image: &mut RgbaImage, w: u32, h: u32, x: u32, y: u32) -> RgbaImage {
     let cropped = crop(image, x, y, w, h);
     cropped.to_image()
 }
